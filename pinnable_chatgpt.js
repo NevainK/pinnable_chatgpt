@@ -17,8 +17,8 @@
 
   const messages = {
     pin: "Pin",
-    pinned: "Pinned Chats",
     unpin: "Unpin",
+    pinnedChatsSidebarTitle: "Pinned Chats",
   };
 
   function getMessage(key) {
@@ -184,7 +184,7 @@
       // 克隆菜单部分的模板，并设置其 ID 和标题
       const pinnedChatsSection = this.sidebarSectionTemplate.cloneNode(true);
       pinnedChatsSection.id = pinnedChatsSidebarID;
-      pinnedChatsSection.querySelector("h3").textContent = getMessage("pinned");
+      pinnedChatsSection.querySelector("h3").textContent = getMessage("pinnedChatsSidebarTitle");
 
       // 将新的固定聊天区域插入到菜单容器中
       this.menuSectionParent.insertBefore(pinnedChatsSection, menuParent);
@@ -219,7 +219,7 @@
     }
 
     #moveChatToPinnedSection(chatId) {
-      const chatItem = document.querySelector(`a[href='/c/${chatId}']`)
+      const chatItem = document.querySelector(`a[href$='/c/${chatId}']`)
         ?.parentElement?.parentElement;
 
       const pinnedChatsOl = document.getElementById(pinnedChatsOrderListID);
@@ -227,7 +227,7 @@
     }
 
     #moveChatOutOfPinnedSection(chatId, associatedH3Text) {
-      const chatItem = document.querySelector(`a[href='/c/${chatId}']`)
+      const chatItem = document.querySelector(`a[href$='/c/${chatId}']`)
         ?.parentElement?.parentElement;
       const h3Node = this.#findH3ByText(associatedH3Text);
 
