@@ -1,5 +1,8 @@
 // ==UserScript==
 // @name         ChatGPT-Pin-Helper
+// @name:en      ChatGPT-Pin-Helper
+// @name:en-US   ChatGPT-Pin-Helper
+// @name:zh-CN   ChatGPT-Pin助手
 // @namespace    http://tampermonkey.net/
 // @version      0.1
 // @description  Enable users to easily pin important conversations to the top for quick access and better organization, enhancing productivity and user experience.
