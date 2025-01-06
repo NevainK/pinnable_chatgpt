@@ -4,8 +4,9 @@
 // @name:en-US   ChatGPT-Pin-Helper
 // @name:zh-CN   ChatGPT-Pin助手
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.1.1
 // @description  Enable users to easily pin important conversations to the top for quick access and better organization, enhancing productivity and user experience.
+// @description:zh-CN  让用户能够轻松地将重要对话置顶，以便快速访问，从而提高生产力和用户体验。
 // @author       NevainK
 // @license      GPL-3.0
 // @match        https://chatgpt.com/*
