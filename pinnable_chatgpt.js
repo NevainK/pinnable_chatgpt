@@ -219,7 +219,7 @@
     }
 
     #moveChatToPinnedSection(chatId) {
-      const chatItem = document.querySelector(`a[href='/c/${chatId}']`)
+      const chatItem = document.querySelector(`a[href$='/c/${chatId}']`)
         ?.parentElement?.parentElement;
 
       const pinnedChatsOl = document.getElementById(pinnedChatsOrderListID);
@@ -227,7 +227,7 @@
     }
 
     #moveChatOutOfPinnedSection(chatId, associatedH3Text) {
-      const chatItem = document.querySelector(`a[href='/c/${chatId}']`)
+      const chatItem = document.querySelector(`a[href$='/c/${chatId}']`)
         ?.parentElement?.parentElement;
       const h3Node = this.#findH3ByText(associatedH3Text);
 
