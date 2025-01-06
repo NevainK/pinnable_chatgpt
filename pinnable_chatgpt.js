@@ -8,7 +8,8 @@
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
-
+// @grant        GM_deleteValue
+// @grant        GM_listValues
 
 // ==/UserScript==
 (function () {
@@ -77,12 +78,12 @@
   };
 
   class sidebarManager {
-    constructor(db) {
-      this.db = db;
+    constructor(db, state) {
+      this.pinnedChatsDB = db;
       this.chatInfoState = state;
     }
-
-    addPinUnpinMenuItem() {
+    // 在处理点击事件时获取当前点击的聊天 ID 和对应的 H3 标题文本
+    addListenEventsOnClick() {
       // 处理点击事件
       const handleClick = (event) => {
         const navElement = event.target.closest("nav");
@@ -99,6 +100,12 @@
         }
       };
 
+      // 绑定点击事件监听器
+      document.addEventListener("click", handleClick, true);
+    }
+
+    // 当菜单弹窗弹出时绑定新建pin按钮事件，需要搭配 addListenEventsOnClick 获取当前点击的聊天ID和对应的H3标题文本
+    addDomMutationObserver() {
       // 处理 DOM 变化
       const handleMutation = (mutations) => {
         mutations.forEach((mutation) => {
@@ -113,10 +120,6 @@
           });
         });
       };
-
-      // 绑定点击事件监听器
-      document.addEventListener("click", handleClick, true);
-
       // 创建并绑定 MutationObserver
       const observer = new MutationObserver(handleMutation);
       observer.observe(document.body, { childList: true, subtree: true });
@@ -135,7 +138,7 @@
       this.chatInfoState
         .waitForChatInfo()
         .then(({ id: currentChatId, name: associatedH3Text }) => {
-          if (this.db.isPinned(currentChatId)) {
+          if (this.pinnedChatsDB.has(currentChatId)) {
             newitem.querySelector("path").setAttribute("d", UNPIN_PATH_D);
             this.#updateSubTextNodeContent(newitem, getMessage("unpin"));
           } else {
@@ -145,16 +148,16 @@
 
           newitem.addEventListener("click", () => {
             if (newitem.textContent === getMessage("pin")) {
-              db.pinChat(currentChatId, associatedH3Text);
+              this.pinnedChatsDB.insert(currentChatId, associatedH3Text);
               this.#moveChatToPinnedSection(currentChatId);
               newitem.querySelector("path").setAttribute("d", UNPIN_PATH_D);
               this.#updateSubTextNodeContent(newitem, getMessage("unpin"));
             } else {
               this.#moveChatOutOfPinnedSection(
                 currentChatId,
-                db.getAssociatedH3Text(currentChatId)
+                this.pinnedChatsDB.get(currentChatId)
               );
-              db.unpinChat(currentChatId);
+              this.pinnedChatsDB.remove(currentChatId);
               newitem.querySelector("path").setAttribute("d", PIN_PATH_D);
               this.#updateSubTextNodeContent(newitem, getMessage("pin"));
             }
@@ -192,10 +195,9 @@
       pinnedChatsOl.innerHTML = "";
       pinnedChatsOl.id = pinnedChatsOrderListID;
 
-      const pinnedChatsInfo = db.getPinnedChats();
-
       // 遍历历史固定聊天数据，生成列表项
-      pinnedChatsInfo.forEach(({ id: chatId }) => {
+      const pinnedChatsInfo = this.pinnedChatsDB.getAll();
+      Object.keys(pinnedChatsInfo).forEach((chatId) => {
         this.#moveChatToPinnedSection(chatId);
       });
     }
@@ -250,48 +252,72 @@
   }
 
   class DBService {
-    static PINNED_CHATS_KEY = "pinnable-chatgpt-pinned-chats";
-
-    constructor() {}
-
-    getPinnedChats() {
-      return GM_getValue(DBService.PINNED_CHATS_KEY, []);
+    /**
+     * 添加一个键值对, 如果键已存在则覆盖
+     * @param {string} key 键
+     * @param {*} value 值
+     */
+    insert(key, value) {
+      GM_setValue(key, value);
     }
 
-    isPinned(chatID) {
-      return this.getPinnedChats().some((item) => item.id === chatID);
+    /**
+     * 获取指定键的值
+     * @param {string} key 键
+     * @returns {*} 存储的值，如果键不存在则返回 undefined
+     */
+    get(key) {
+      return GM_getValue(key, undefined);
     }
 
-    pinChat(chatID, associatedH3Text) {
-      const allChatsInfo = [
-        ...this.getPinnedChats(),
-        { id: chatID, name: associatedH3Text },
-      ];
-      this.#setPinnedChats(allChatsInfo);
+    /**
+     * 检查键是否存在
+     * @param {string} key 键
+     * @returns {boolean} 是否存在
+     */
+    has(key) {
+      return this.get(key) !== undefined;
     }
 
-    unpinChat(chatID) {
-      const allChatsInfo = this.getPinnedChats().filter(
-        (item) => item.id !== chatID
-      );
-      this.#setPinnedChats(allChatsInfo);
+    /**
+     * 删除指定键
+     * @param {string} key 键
+     */
+    remove(key) {
+      GM_deleteValue(key);
     }
 
-    getAssociatedH3Text(chatID) {
-      return this.getPinnedChats().find((item) => item.id === chatID)?.name;
+    /**
+     * 获取所有键值对
+     * @returns {Object} 包含所有键值对的对象
+     */
+    getAll() {
+      const allKeys = GM_listValues();
+      const result = {};
+      allKeys.forEach((key) => {
+        result[key] = GM_getValue(key);
+      });
+      return result;
     }
 
-    #setPinnedChats(value) {
-      GM_setValue(DBService.PINNED_CHATS_KEY, value);
+    /**
+     * 清空所有键值对
+     */
+    clear() {
+      const allKeys = GM_listValues();
+      allKeys.forEach((key) => {
+        GM_deleteValue(key);
+      });
     }
   }
 
   const db = new DBService();
-  const manager = new sidebarManager(db);
+  const manager = new sidebarManager(db, state);
 
   const run = () => {
     manager.initPinnedChatsSidebar();
-    manager.addPinUnpinMenuItem();
+    manager.addListenEventsOnClick();
+    manager.addDomMutationObserver();
   };
   const observer = new MutationObserver(() => {
     clearTimeout(observer.timeout);
