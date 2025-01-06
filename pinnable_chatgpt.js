@@ -184,7 +184,9 @@
       // 克隆菜单部分的模板，并设置其 ID 和标题
       const pinnedChatsSection = this.sidebarSectionTemplate.cloneNode(true);
       pinnedChatsSection.id = pinnedChatsSidebarID;
-      pinnedChatsSection.querySelector("h3").textContent = getMessage("pinnedChatsSidebarTitle");
+      pinnedChatsSection.querySelector("h3").textContent = getMessage(
+        "pinnedChatsSidebarTitle"
+      );
 
       // 将新的固定聊天区域插入到菜单容器中
       this.menuSectionParent.insertBefore(pinnedChatsSection, menuParent);
@@ -319,13 +321,17 @@
     manager.addListenEventsOnClick();
     manager.addDomMutationObserver();
   };
+
   const observer = new MutationObserver(() => {
-    clearTimeout(observer.timeout);
-    observer.timeout = setTimeout(() => {
-      run();
-    }, 2000);
-    observer.disconnect();
+    const nav = document.querySelector("nav");
+    const h3 = nav?.querySelector("h3");
+
+    if (h3) {
+      run(); 
+      observer.disconnect(); // 停止观察
+    }
   });
 
+  // 开始观察文档根节点的子树变化
   observer.observe(document.body, { childList: true, subtree: true });
 })();
