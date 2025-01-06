@@ -4,6 +4,7 @@
 // @version      0.1
 // @description  Enable users to easily pin important conversations to the top for quick access and better organization, enhancing productivity and user experience.
 // @author       NevainK
+// @license      GPL-3.0
 // @match        https://chatgpt.com/*
 // @grant        GM_addStyle
 // @grant        GM_setValue
