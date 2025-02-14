@@ -205,7 +205,12 @@
       // 遍历历史固定聊天数据，生成列表项
       const pinnedChatsInfo = this.pinnedChatsDB.getAll();
       Object.keys(pinnedChatsInfo).forEach((chatId) => {
-        this.#moveChatToPinnedSection(chatId);
+        try {
+          this.#moveChatToPinnedSection(chatId);
+        } catch (error) {
+          console.error(`Error moving chat ${chatId} to pinned section:`, error);
+          // 可以选择继续处理后续的 chatId
+        }
       });
     }
 
